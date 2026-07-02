@@ -1,0 +1,23 @@
+services:
+  engine:
+    build:
+      context: .
+      dockerfile: engine-service/Dockerfile
+    ports:
+      - "8080:8080"
+
+  session:
+    build:
+      context: .
+      dockerfile: session-service/Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      ENGINE_URL: http://engine:8080
+    depends_on:
+      - engine
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/8081"]
+      interval: 2s
+      timeout: 2s
+      retries: 30

@@ -1,0 +1,13 @@
+server:
+  port: 8081
+
+spring:
+  threads:
+    virtual:
+      enabled: true
+
+engine:
+  base-url: ${ENGINE_URL:http://localhost:8080}
+
+simulation:
+  move-delay-ms: 400
