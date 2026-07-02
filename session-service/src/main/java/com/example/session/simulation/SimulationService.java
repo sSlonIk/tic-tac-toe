@@ -59,6 +59,11 @@ public class SimulationService {
                 player = state.nextPlayer();
                 Thread.sleep(moveDelayMs);
             }
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            session.markFailed("Simulation interrupted");
+            eventPublisher.publish(session);
+            log.error("Simulation interrupted for session {}", sessionId);
         } catch (Exception exception) {
             session.markFailed(exception.getMessage() == null ? exception.getClass().getSimpleName() : exception.getMessage());
             eventPublisher.publish(session);

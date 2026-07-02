@@ -4,6 +4,8 @@ import com.example.session.domain.Player;
 import com.example.session.engine.dto.GameState;
 import com.example.session.engine.dto.MoveRequest;
 import java.util.function.Supplier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
@@ -14,6 +16,8 @@ import org.springframework.web.client.RestClientResponseException;
 @Component
 public class EngineClient {
 
+  private static final Logger log = LoggerFactory.getLogger(EngineClient.class);
+
   private final RestClient client;
 
   public EngineClient(RestClient.Builder restClientBuilder, @Value("${engine.base-url}") String baseUrl) {
@@ -21,27 +25,30 @@ public class EngineClient {
   }
 
   public GameState createGame(String gameId) {
-    return executeWithRetry(() -> client.post()
+    return execute(() -> client.post()
         .uri("/games/{gameId}", gameId)
         .retrieve()
-        .body(GameState.class));
+        .body(GameState.class), 3);
   }
 
   public GameState move(String gameId, Player player, int position) {
-    return executeWithRetry(() -> client.post()
+    return execute(() -> client.post()
         .uri("/games/{gameId}/move", gameId)
         .body(new MoveRequest(player, position))
         .retrieve()
-        .body(GameState.class));
+        .body(GameState.class), 1);
   }
 
-  private <T> T executeWithRetry(Supplier<T> call) {
+  private <T> T execute(Supplier<T> call, int maxAttempts) {
     ResourceAccessException lastConnectionError = null;
-    for (int attempt = 0; attempt < 3; attempt++) {
+    for (int attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         return call.get();
       } catch (ResourceAccessException exception) {
         lastConnectionError = exception;
+        if (attempt < maxAttempts) {
+          log.warn("Engine connection failed (attempt {}/{}): {}", attempt, maxAttempts, exception.getMessage());
+        }
       } catch (RestClientResponseException exception) {
         throw new EngineUnavailableException(
             "Engine responded with %d: %s".formatted(

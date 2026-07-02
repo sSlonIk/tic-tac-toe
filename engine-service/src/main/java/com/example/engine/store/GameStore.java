@@ -4,7 +4,7 @@ import com.example.engine.domain.Game;
 import com.example.engine.domain.GameAlreadyExistsException;
 import com.example.engine.domain.GameNotFoundException;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.UnaryOperator;
+import java.util.function.Function;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -21,22 +21,13 @@ public class GameStore {
         return created;
     }
 
-    public Game get(String gameId) {
+    public <T> T withGame(String gameId, Function<Game, T> action) {
         Game game = games.get(gameId);
         if (game == null) {
             throw new GameNotFoundException(gameId);
         }
-        return game;
-    }
-
-    public Game update(String gameId, UnaryOperator<Game> updater) {
-        return games.compute(gameId, (id, game) -> {
-            if (game == null) {
-                throw new GameNotFoundException(gameId);
-            }
-            synchronized (game) {
-                return updater.apply(game);
-            }
-        });
+        synchronized (game) {
+            return action.apply(game);
+        }
     }
 }

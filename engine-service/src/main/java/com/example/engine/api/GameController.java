@@ -2,7 +2,6 @@ package com.example.engine.api;
 
 import com.example.engine.api.dto.GameStateResponse;
 import com.example.engine.api.dto.MoveRequest;
-import com.example.engine.domain.Game;
 import com.example.engine.domain.GameLogic;
 import com.example.engine.store.GameStore;
 import jakarta.validation.Valid;
@@ -29,8 +28,7 @@ public class GameController {
   @PostMapping("/{gameId}")
   @ResponseStatus(HttpStatus.CREATED)
   public GameStateResponse create(@PathVariable("gameId") String gameId) {
-    Game game = gameStore.create(gameId);
-    return GameStateResponse.from(game);
+    return GameStateResponse.from(gameStore.create(gameId));
   }
 
   @PostMapping("/{gameId}/move")
@@ -38,15 +36,14 @@ public class GameController {
       @PathVariable("gameId") String gameId,
       @Valid @RequestBody MoveRequest request
   ) {
-    Game game = gameStore.update(gameId, existing -> {
-      gameLogic.applyMove(existing, request.player(), request.position());
-      return existing;
+    return gameStore.withGame(gameId, game -> {
+      gameLogic.applyMove(game, request.player(), request.position());
+      return GameStateResponse.from(game);
     });
-    return GameStateResponse.from(game);
   }
 
   @GetMapping("/{gameId}")
   public GameStateResponse get(@PathVariable("gameId") String gameId) {
-    return GameStateResponse.from(gameStore.get(gameId));
+    return gameStore.withGame(gameId, GameStateResponse::from);
   }
 }

@@ -50,9 +50,13 @@ public class Session {
         this.failureReason = null;
     }
 
-    public synchronized void markRunning() {
+    public synchronized boolean tryStartRunning() {
+        if (this.status != SessionStatus.CREATED) {
+            return false;
+        }
         this.status = SessionStatus.RUNNING;
         this.failureReason = null;
+        return true;
     }
 
     public synchronized void recordMove(Player player, int position, GameState state, Move move) {

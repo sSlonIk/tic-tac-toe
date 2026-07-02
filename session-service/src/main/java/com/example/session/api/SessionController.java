@@ -56,11 +56,8 @@ public class SessionController {
   @ResponseStatus(HttpStatus.ACCEPTED)
   public SessionStateResponse simulate(@PathVariable("sessionId") String sessionId) {
     Session session = sessionStore.get(sessionId);
-    synchronized (session) {
-      if (session.getStatus() != SessionStatus.CREATED) {
-        throw new SessionConflictException("Simulation can only be started from CREATED state");
-      }
-      session.markRunning();
+    if (!session.tryStartRunning()) {
+      throw new SessionConflictException("Simulation can only be started from CREATED state");
     }
     simulationService.simulate(sessionId);
     return SessionStateResponse.from(session);

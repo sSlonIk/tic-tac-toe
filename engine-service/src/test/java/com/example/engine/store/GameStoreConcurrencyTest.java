@@ -2,7 +2,6 @@ package com.example.engine.store;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.example.engine.domain.Game;
 import com.example.engine.domain.GameConflictException;
 import com.example.engine.domain.GameLogic;
 import com.example.engine.domain.Player;
@@ -30,7 +29,7 @@ class GameStoreConcurrencyTest {
                 pool.submit(() -> {
                     try {
                         start.await();
-                        store.update("race", game -> {
+                        store.withGame("race", game -> {
                             logic.applyMove(game, Player.X, 4);
                             return game;
                         });
@@ -48,8 +47,10 @@ class GameStoreConcurrencyTest {
         }
 
         assertEquals(1, successes.get());
-        Game game = store.get("race");
-        assertEquals(Player.X, game.getBoard()[4]);
-        assertEquals(Player.O, game.getNextPlayer());
+        store.withGame("race", game -> {
+            assertEquals(Player.X, game.getBoard()[4]);
+            assertEquals(Player.O, game.getNextPlayer());
+            return game;
+        });
     }
 }

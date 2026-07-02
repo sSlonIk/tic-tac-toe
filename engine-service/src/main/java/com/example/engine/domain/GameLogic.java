@@ -9,9 +9,6 @@ public class GameLogic {
     };
 
     public void applyMove(Game game, Player player, int position) {
-        if (position < 0 || position > 8) {
-            throw new IllegalArgumentException("Position must be between 0 and 8");
-        }
         if (game.getStatus() != GameStatus.IN_PROGRESS) {
             throw new GameFinishedException(game.getStatus());
         }

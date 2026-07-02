@@ -5,6 +5,11 @@ services:
       dockerfile: engine-service/Dockerfile
     ports:
       - "8080:8080"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/8080"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
 
   session:
     build:
@@ -15,7 +20,8 @@ services:
     environment:
       ENGINE_URL: http://engine:8080
     depends_on:
-      - engine
+      engine:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/8081"]
       interval: 2s

@@ -198,7 +198,7 @@ class SessionControllerIntegrationTest {
   void shouldRejectRepeatedSimulation() throws Exception {
     String sessionId = "already-running";
     Session session = new Session(sessionId);
-    session.markRunning();
+    session.tryStartRunning();
     sessionStore.save(session);
 
     mockMvc.perform(post("/sessions/{sessionId}/simulate", sessionId))
